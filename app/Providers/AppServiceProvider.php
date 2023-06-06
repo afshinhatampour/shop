@@ -22,7 +22,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::define('manage-product-show', function (User $user, Product $product) {
-        });
+        //
     }
 }

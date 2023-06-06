@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\Manage\Product\UpdateProductRequest;
 use App\Models\Product;
 use App\Repositories\ProductRepository;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class ProductController extends ApiController
@@ -24,7 +25,9 @@ class ProductController extends ApiController
      */
     public function index(): JsonResponse
     {
-        return $this->success(trans('product.manage.index'), $this->productRepository->paginate());
+        return !Gate::allows('product-index') ?
+            $this->error('you cant see products list', HttpFoundationResponse::HTTP_UNAUTHORIZED) :
+            $this->success(trans('product.manage.index'), $this->productRepository->paginate());
     }
 
     /**
