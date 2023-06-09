@@ -31,11 +31,11 @@ class Role extends Model
     }
 
     /**
-     * @return HasMany
+     * @return BelongsToMany
      */
-    public function permissions(): HasMany
+    public function permissions(): BelongsToMany
     {
-        return $this->hasMany(Permission::class);
+        return $this->belongsToMany(Permission::class);
     }
 
     /**

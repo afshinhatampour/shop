@@ -26,7 +26,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);
     Route::get('test', function () {
-        return \App\Enums\RoleEnums::getAllRoles();
+        return (new \App\Repositories\UserRepository())->userAccessMethodsList();
     });
 });
 

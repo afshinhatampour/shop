@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Enums\ProductEnums;
+use App\Http\Controllers\Api\V1\Manage\Product\ProductController;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
@@ -13,7 +15,9 @@ class ProductPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return in_array(
+            ['method' => 'index', 'controller' => ProductController::class],
+            $user->userAccessMethodsList());
     }
 
     /**
@@ -21,7 +25,13 @@ class ProductPolicy
      */
     public function view(User $user, Product $product): bool
     {
-        //
+        if ($product->status != ProductEnums::STATUS['active']) {
+            return false;
+        }
+        return in_array(
+            ['method' => 'show', 'controller' => ProductController::class],
+            $user->userAccessMethodsList()
+        );
     }
 
     /**

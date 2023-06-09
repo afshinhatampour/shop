@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Passport\HasApiTokens;
-use PHPUnit\Framework\Constraint\IsEmpty;
-use function PHPUnit\Framework\isEmpty;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    const ACCESS_METHODS_CACHE_PREFIX = 'user_access_methods_';
 
     /**
      * The attributes that are mass assignable.
@@ -79,5 +81,45 @@ class User extends Authenticatable
     {
         return (bool)array_intersect($this->roles->pluck('id')->toArray(),
             Role::staffRolesId());
+    }
+
+
+    /**
+     * @param int $userId
+     * @return Collection
+     */
+    public static function userRolesAndPermissionsById(int $userId): Collection
+    {
+        return User::find($userId)->roles()->with('permissions')->get();
+    }
+
+    /**
+     * @return Collection
+     */
+    public function authUserRolesAndPermissions(): Collection
+    {
+        return self::userRolesAndPermissionsById(auth()->user()->id);
+    }
+
+    /**
+     * @return array
+     */
+    public function userAccessMethodsList(): array
+    {
+        if (Cache::has(self::ACCESS_METHODS_CACHE_PREFIX . auth()->user()->id)) {
+            return Cache::get(self::ACCESS_METHODS_CACHE_PREFIX . auth()->user()->id);
+        } else {
+            foreach ($this->authUserRolesAndPermissions() as $roleWithPermissions) {
+                foreach ($roleWithPermissions->permissions as $permission) {
+                    $userAccessMethodsList[] = [
+                        'method'     => $permission->method,
+                        'controller' => $permission->controller
+                    ];
+                };
+            }
+            Cache::set(self::ACCESS_METHODS_CACHE_PREFIX . auth()->user()->id,
+                $userAccessMethodsList ?? []);
+            return $userAccessMethodsList;
+        }
     }
 }

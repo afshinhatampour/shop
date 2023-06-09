@@ -25,7 +25,7 @@ class ProductController extends ApiController
      */
     public function index(): JsonResponse
     {
-        return !Gate::allows('product-index') ?
+        return !Gate::authorize('manage-product-index') ?
             $this->error('you cant see products list', HttpFoundationResponse::HTTP_UNAUTHORIZED) :
             $this->success(trans('product.manage.index'), $this->productRepository->paginate());
     }
@@ -47,7 +47,9 @@ class ProductController extends ApiController
      */
     public function show(Product $product)
     {
-        return $this->success(trans('product.manage.show'), $product);
+        return !Gate::authorize('manage-product-show', $product) ?
+            $this->error('', HttpFoundationResponse::HTTP_UNAUTHORIZED) :
+            $this->success(trans('product.manage.show'), $product);
     }
 
     /**
